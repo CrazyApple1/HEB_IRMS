@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItmsOperationLogSqlMap">
+	
+	<!-- 系统操作日志实体类 -->
+	<typeAlias alias="itmsOperationLog"
+		type="com.boco.itms.basic.po.ibatis.ItmsOperationLog" />
+		
+	<!-- 系统操作日志查询VO -->
+	<typeAlias alias="operationLogQueryVO"
+		type="com.boco.itms.basic.vo.OperationLogQueryVO" />
+	
+	<!-- 添加操作日志 -->
+	<insert id="insertLog" parameterClass="itmsOperationLog">
+		<selectKey resultClass="int" keyProperty="id">
+			SELECT ITMS_SYSTEM_LOG_SEQ.NEXTVAL AS ID FROM DUAL
+		</selectKey>
+		INSERT INTO ITMS_SYSTEM_LOG 
+		(
+		 ID , OPERATIONID , OPERATORID, SUBSYSID , OPTYPE , OPCONTENT ,
+		 OPTIME, EXETIME , SUCCESSFLAG , MEMO , IP
+		) 
+		VALUES
+		(
+			#id#, #operationId#, #operatorId# , #subSysId# , #opType# , #opContent# , 
+			#opTime# , #exeTime# , #successFlag# , #memo# , #ip#
+		)
+	</insert>
+	
+	
+	<!-- 条件查询系统操作日志时，获取总页数 -->
+	<select id="getOperationLogByConditonWithPageCount" parameterClass="operationLogQueryVO"
+		resultClass="java.lang.Integer">
+		<![CDATA[ 
+		 SELECT
+		 	COUNT(0) 
+		 FROM 
+		 	ITMS_SYSTEM_LOG a 
+		 LEFT JOIN 
+		 	ITMS_UUMS_USERS b on a.OPERATORID = b.USERID
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="operatorName">
+				b.USERNAME like '%$operatorName$%'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="subSystemId">
+				a.SUBSYSID = #subSystemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="opType">
+				a.OPTYPE = #opType#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="successFlag">
+				a.SUCCESSFLAG = #successFlag#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="queryStartDate">
+				a.OPTIME >= #queryStartDate#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="queryEndDate">
+			<![CDATA[ 
+				a.OPTIME <= #queryEndDate#
+			]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 条件查询排班计划，带分页 -->
+	<select id="getDutyPlanByConditionWithPage" parameterClass="operationLogQueryVO"
+		resultClass="itmsOperationLog">
+		<![CDATA[ 
+		 SELECT 
+		 	* 
+		 FROM (
+		 	SELECT 
+		 		z.*, rownum as linenum 
+		 	FROM (
+				 SELECT
+				 	 a.ID , a.OPERATIONID , a.OPERATORID, b.USERNAME as OPERATORNAME , 
+				 	 a.SUBSYSID , c.SUBSYSNAME , a.OPTYPE , a.OPCONTENT ,
+					 a.OPTIME, a.EXETIME , a.MEMO , a.SUCCESSFLAG , a.IP
+				 FROM 
+				 	ITMS_SYSTEM_LOG a 
+				 LEFT JOIN 
+				 	ITMS_UUMS_USERS b on a.OPERATORID = b.USERID
+				 LEFT JOIN 
+				 	ITMS_UUMS_SUBSYSTEM c on a.SUBSYSID = c.SUBSYSID
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="operatorName">
+				b.USERNAME like '%$operatorName$%'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="subSystemId">
+				a.SUBSYSID = #subSystemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="opType">
+				a.OPTYPE = #opType#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="successFlag">
+				a.SUCCESSFLAG = #successFlag#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="queryStartDate">
+				a.OPTIME >= #queryStartDate#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="queryEndDate">
+			<![CDATA[ 
+				a.OPTIME <= #queryEndDate#
+			]]>
+			</isNotEmpty>
+		</dynamic>
+		<![CDATA[ 
+				ORDER BY
+					a.ID DESC
+			) z 
+			WHERE ROWNUM <= #endIndex#
+		) 
+ 		WHERE
+ 			LINENUM > #startIndex#
+ 		]]>
+	</select>
+</sqlMap>

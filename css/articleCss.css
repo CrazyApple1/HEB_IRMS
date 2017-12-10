@@ -1,0 +1,55 @@
+html,body{
+    margin: 0px;
+    padding: 0px;
+    font-size: 14px;
+    background-color: white;
+}
+.ul.ztree{
+    background-color: white;
+}
+.m-ztree{
+    margin-left: 10px;
+}
+/*表格*/
+.m-content{
+    margin-left: 40px;
+    border-left: 1px solid rgba(62, 57, 56, 0.47);
+}
+.container .container-title-div{
+    margin-top: 20px;
+    text-align: center;
+}
+.container .container-title-h4{
+    display: inline;
+}
+.div-AuthDlg{
+    display:none;
+    width: 400px;
+    height: 300px;
+    margin-left: -200px;
+    margin-top: -150px;
+    background-color: white;
+    border-radius: 4px;
+    border:1px solid #dddddd;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+}
+.div-AuthDlg-title{
+    height: 40px;
+    text-align: center;
+    border-bottom:1px solid #dddddd;
+    position:relative; /*不要定位到天上去*/
+}
+.div-AuthDlg-title h4{
+    display: inline;
+    line-height: 40px;
+
+}
+.div-AuthDlg-title button{
+    height: 30px;
+    position:absolute;
+    top:5px;
+    right:10px;
+}

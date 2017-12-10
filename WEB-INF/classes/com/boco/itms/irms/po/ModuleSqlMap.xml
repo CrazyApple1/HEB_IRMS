@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ModuleSqlMap">
+<!--查询实体类  -->
+	<typeAlias alias="module" type="com.boco.itms.irms.po.Module"/>
+<!--查询实体Vo  -->
+	
+	
+	<resultMap class="com.boco.itms.irms.po.Module" id="moduleMap">
+		<result property="moduleID" jdbcType="VARCHAR2" column="moduleID"/>
+		<result property="moduleName" jdbcType="VARCHAR2" column="moduleName"/>
+		<result property="supModuleID" jdbcType="VARCHAR2" column="supModuleID"/>
+		<result property="isDelete" jdbcType="CHAR" column="isDelete"/>
+	</resultMap>
+	<sql id="moduleFields">
+		moduleID,moduleName,isDelete,supModuleID
+	</sql>
+	
+	<select id="moduleIDisExist" parameterClass="java.lang.String" resultClass="java.lang.Long">
+		SELECT 
+			count(moduleID) 
+		FROM 
+			ITMS_IRMS_MODULE 
+		WHERE 
+			moduleID=#moduleID#
+	
+	</select>
+<!--插入实体  -->
+<insert id="add" parameterClass="module">
+	
+	INSERT INTO ITMS_IRMS_MODULE
+	(
+	 <include refid="moduleFields"/>
+	)
+	VALUES
+	(
+		#moduleID#,#moduleName#,#isDelete#,#supModuleID#
+	)
+</insert>
+<!-- 删除实体 -->
+	<update id="deleteByKey" parameterClass="java.lang.String">
+		UPDATE ITMS_IRMS_MODULE SET isDelete ='1' where moduleID=#id#
+	</update>
+<!-- 修改实体 -->
+	<update id="update" parameterClass="module">
+		UPDATE
+			 ITMS_IRMS_MODULE 
+		SET 
+			moduleName=#moduleName#,
+			isDelete=#isDelete#,
+			supModuleID=#supModuleID#,
+		WHERE
+			 moduleID=#moduleID#
+	</update>
+	<!--查询单个实体  -->
+	<select id="selectByKey" parameterClass="java.lang.String" resultMap="moduleMap">
+		SELECT 
+			 <include refid="moduleFields"/>
+		FROM 
+			ITMS_IRMS_MODULE 
+		WHERE 
+			moduleID=#id#
+		AND
+			isDelete='0'
+			
+	</select>
+	<!--查询所有列表  -->
+	<select id="selectList" resultMap="moduleMap">
+		SELECT 
+			 <include refid="moduleFields"/>
+		FROM 
+			ITMS_IRMS_MODULE 
+		WHERE 
+			isDelete='0'
+	</select>
+	<!--按照条件查询所有列表  -->
+	<select id="getPageResultWithoutPage" parameterClass="com.boco.itms.irms.vo.ModuleVo" resultMap="moduleMap">
+		SELECT 
+			 <include refid="moduleFields"/>
+		FROM 
+			ITMS_IRMS_MODULE 
+		WHERE 
+			isDelete = '0' 
+		AND supModuleID=#supModuleID#
+	</select>
+	<select id="getModuleListByWebUserID" parameterClass="com.boco.itms.irms.vo.ModuleVo" resultMap="moduleMap">
+		SELECT 
+			 <include refid="moduleFields"/>
+		FROM
+			ITMS_IRMS_MODULE
+		WHERE
+			moduleID
+			IN
+			(SELECT DISTINCT moduleID FROM ITMS_IRMS_WEBINFOMAP WHERE webID= #webUserID#)
+		AND
+			isDelete='0'
+	</select>
+	
+
+
+</sqlMap>
+	

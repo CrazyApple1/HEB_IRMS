@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WebUserSqlMap">
+<!--查询实体类  -->
+	<typeAlias alias="webUser" type="com.boco.itms.irms.po.WebUser"/>
+<!--查询实体Vo  -->
+	<typeAlias alias="webUserVo" type="com.boco.itms.irms.vo.WebUserVo"/>
+	
+	
+	<resultMap class="webUser" id="webUserMap">
+		<result property="webID" jdbcType="NUMBER" column="webID"/>
+		<result property="webSiteName" jdbcType="VARCHAR2" column="webName"/>
+		<result property="webSiteAddress" jdbcType="VARCHAR2" column="webSite"/>
+		<result property="status" jdbcType="CHAR" column="status"/>
+		<result property="isDelete" jdbcType="CHAR" column="isDelete"/>
+		<result property="accreditCode" jdbcType="VARCHAR2" column="accreditCode"/>
+	</resultMap>
+	<resultMap class="com.boco.itms.irms.po.Module" id="moduleMap">
+		<result property="moduleID" jdbcType="VARCHAR2" column="moduleID"/>
+		<result property="moduleName" jdbcType="VARCHAR2" column="moduleName"/>
+		<result property="supModuleID" jdbcType="VARCHAR2" column="supModuleID"/>
+		<result property="isDelete" jdbcType="CHAR" column="isDelete"/>
+	</resultMap>
+	<sql id="webUserFields">
+		webID,	 webName, webSite, status, accreditCode,isDelete
+	</sql>
+<!--插入实体  -->
+<insert id="add" parameterClass="webUser">
+	<selectKey resultClass="Long" keyProperty="webID">
+		SELECT ITMS_IRMS_WEB_SEQ.NEXTVAL AS webID FROM DUAL
+	</selectKey>
+	INSERT INTO ITMS_IRMS_WEB
+	(
+	 <include refid="webUserFields"/>
+	)
+	VALUES
+	(
+		#webID#,#webSiteName#, #webSiteAddress#, #status#, #accreditCode#, #isDelete#
+	)
+</insert>
+	<!--逻辑删除实体  -->
+	<update id="deleteByKey" parameterClass="java.lang.Long">
+		UPDATE 
+			ITMS_IRMS_WEB
+		SET
+			isDelete='1'
+		WHERE 
+			webID=#id#
+	</update>
+	<!-- 修改   -->
+	<update id="update" parameterClass="webUser">
+		UPDATE
+			ITMS_IRMS_WEB
+		SET
+			webName=#webSiteName# ,
+			webSite=#webSiteAddress#,
+			status=#status#,
+			accreditCode=#accreditCode#,
+			isDelete=#isDelete#
+		WHERE
+			webID=#webID#
+	</update>
+	<!--根据ID查询  -->
+	<select id="selectByKey" parameterClass="java.lang.Long" resultMap="webUserMap">
+		SELECT
+			<include refid="webUserFields"/>
+		FROM	
+			ITMS_IRMS_WEB
+		WHERE	
+			webID=#id# AND isDelete=0
+	</select>
+	<!--查询所有信息  -->
+	<select id="selectList"  resultMap="webUserMap">
+		SELECT
+			<include refid="webUserFields"/>
+		FROM	
+			ITMS_IRMS_WEB
+		WHERE	
+			isDelete=0
+	</select>
+	<!-- 查询分页信息,有查询信息,服务端进行分页  -->
+	<select id="getPageResult"  parameterClass="webUserVo" resultMap="webUserMap">
+	<![CDATA[ 
+	
+		SELECT 
+			temp.webID,	 temp.webName, temp.webSite, temp.status, temp.accreditCode
+		FROM 
+			(
+			SELECT 
+				innerT.*,rownum rn 
+			FROM 
+				(
+				SELECT 
+					w.*
+				FROM
+					 ITMS_IRMS_WEB w
+					$whereStatement$
+					$orderByStatement$
+				) innerT
+			WHERE ROWNUM < #endIndex#
+			) temp
+		 WHERE temp.rn > #startIndex#
+		]]>
+	</select>
+	
+	<!-- 查询分页信息,有查询信息      前端分页  -->
+	<select id="getPageResultWithoutPage" parameterClass="webUserVo" resultMap="webUserMap">
+			SELECT
+			  <include refid="webUserFields"/>
+		FROM
+			ITMS_IRMS_WEB
+			$whereStatement$
+			$orderByStatement$
+	
+	</select>
+	<!--查询数据总量,有where  -->
+	<select id="getTotalResults" parameterClass="webUserVo" resultClass="java.lang.Long">
+		SELECT 
+			count(webID) 
+		FROM
+			ITMS_IRMS_WEB
+		$whereStatement$
+	</select>
+		<!--根据用户名和授权码查询用户  -->
+	<select id="getWebUserByNameAndAccreditCode" parameterClass="webUserVo" resultMap="webUserMap">
+		SELECT
+			  <include refid="webUserFields"/>
+		FROM
+			ITMS_IRMS_WEB
+			$whereStatement$
+	</select>
+	<!--查询模块儿权限   join  -->
+	<select id="getModuleListByWebUserID" parameterClass="java.lang.Long" resultMap="moduleMap">
+		SELECT 
+			moduleID,moduleName,isDelete,supModuleID
+		FROM 
+			ITMS_IRMS_MODULE 
+		WHERE 
+			moduleID 
+		IN 
+			(
+			SELECT 
+				w.MODULEID 
+			FROM  
+				ITMS_IRMS_WEBINFOMAP w 
+			WHERE 
+				w.WEBID=#webUserID#
+			)
+	</select>
+	<!-- 删除模块权限 -->
+	<delete id="deleteModuleByWebUserID" parameterClass="java.lang.Long" >
+		DELETE
+		FROM 
+			ITMS_IRMS_WEBINFOMAP
+		WHERE 
+			webID=#webUserID#
+	</delete>
+	<!--添加模块权限  -->
+	<insert id="addModule" parameterClass="com.boco.itms.irms.vo.WebUserModuleInfoMapVo">
+		INSERT INTO
+		ITMS_IRMS_WEBINFOMAP
+		(
+			webID,moduleID
+		)
+		VALUES
+		(
+		#webID#,#moduleID#
+		)
+	</insert>
+</sqlMap>
+	

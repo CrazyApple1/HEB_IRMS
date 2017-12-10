@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<import resource="classpath:org/codehaus/xfire/spring/xfire.xml" />
+	<bean id="baseService" class="org.codehaus.xfire.spring.remoting.XFireExporter"
+		abstract="true" lazy-init="false">
+		<property name="serviceFactory" ref="xfire.serviceFactory" />
+		<property name="xfire" ref="xfire" />
+	</bean>		
+	
+	<!--文章WS  -->			
+	<bean id="articleControllorWSBean" class="com.boco.itms.irms.ws.impl.ArticleControllerWSImpl">
+		<property name="webUserService" ref="webUserService"></property>
+		<property name="moduleService" ref="moduleService"></property>
+		<property name="articleService" ref="articleService"></property>
+		
+	</bean>
+	<bean id="articleControllorWS" parent="baseService">
+		<property name="serviceBean" ref="articleControllorWSBean"></property>
+		<property name="serviceClass" value="com.boco.itms.irms.ws.ArticleControllerWS"></property>
+		<property name="name" value="ITMS_IRMS_ARTICLEWS" />
+	</bean>
+	<!--模块WS  -->
+	<bean id="moduleControllorWSBean" class="com.boco.itms.irms.ws.impl.ModuleControllerWSImpl">
+		<property name="webUserService" ref="webUserService"></property>
+		<property name="moduleService" ref="moduleService"></property>
+	</bean>
+	<bean id="moduleControllerWS" parent="baseService">
+		<property name="serviceBean" ref="moduleControllorWSBean"></property>
+		<property name="serviceClass" value="com.boco.itms.irms.ws.ModuleControllerWS"></property>
+		<property name="name" value="ITMS_IRMS_MODULEWS" />
+	</bean>
+	
+
+
+</beans>

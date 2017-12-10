@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html" charset="GBK">
+    <title>新建文章</title>
+    <!--bootstrap css theme-->
+    <link href="plugin/bootstrap-3.3.5-dist/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <link href="plugin/bootstrap-3.3.5-dist/css/bootstrap-theme.css" type="text/css" rel="stylesheet">
+    <!--ueditor的js-->
+    <script src="plugin/ueditor-gbk-jsp/ueditor.config.js" type="text/javascript"></script>
+    <script src="plugin/ueditor-gbk-jsp/ueditor.all.min.js" type="text/javascript"> </script>
+    <script src="plugin/ueditor-gbk-jsp/lang/zh-cn/zh-cn.js" type="text/javascript"></script>
+    <!--jquery.js-->
+    <script src="plugin/jquery/jquery-1.12.3.js" type="text/javascript"></script>
+    <script src="plugin/compatible/jquery-migrate-1.4.1.js" type="text/javascript"></script>
+    <!--bootstrap.js-->
+    <script src="plugin/bootstrap-3.3.5-dist/js/bootstrap.min.js" type="text/javascript"></script>
+    <!--兼容性插件-->
+    <script src="plugin/compatible/respond.min.js" type="text/javascript"></script>
+    <script src="plugin/compatible/html5shiv.js" type="text/javascript"></script>
+    <!--自定义-->
+    <script src="js/globalUrl.js"></script>
+    <script src="js/globalVars.js"></script>
+    <script src="js/Util.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        window.UEDITOR_HOME_URL="/plugin/ueditor-gbk-jsp/"
+        $(document).ready(function(){
+            var editor = UE.getEditor( "editor" );
+            var isLoadingDraf=false;//判断是否是加载新的页面，还是加载原来的页面
+            //查询是否传入了文章ID,以此判断是否是编辑
+            var mArticleID = queryUrlStrByName("articleID");
+            var mModuleID = queryUrlStrByName("moduleID");
+            if(mArticleID>0){
+                isLoadingDraf=true;
+            }
+            var ipHead="";//获取得到的值
+            var ipSubHead="";
+            var ipAuthor="";
+            var txtSumy="";
+            var txtHTML="";
+            editor.addListener("ready", function () {
+                // editor准备好之后才可以设置内容到编辑器中
+                editor.setContent(txtHTML);
+            });
+
+            if(isLoadingDraf){//加载历史
+                var mUrl=baseUrl+"article/getByID.shtml?articleID="+mArticleID;
+                mAjaxAndCallError("POST",mUrl,mSuccessCallback,mErrorCallback);
+                //成功
+                function mSuccessCallback(data){
+                    var mData=data.data;
+                    $( "#ipHead" ).val(mData.heading);
+                    $( "#ipSubHead" ).val(mData.subheading);
+                    $( "#ipAuthor" ).val(mData.author);
+                    $( "#txtSumy" ).val(mData.summary);
+                    txtHTML=mData.content;
+                }
+                function mErrorCallback(XMLHttpRequest, textStatus, errorThrown){
+                    alert("加载失败，请刷新页面");
+                }
+            }
+//            $( "#btnSaveDraft" ).click(function(){//保存到草稿
+//                getVal();
+//                var draftUrl=baseUrl+"article/add.shtml"
+//
+//                var draftParam={
+//                    heading:ipHead,
+//                    subheading:ipSubHead,
+//                    author:ipAuthor,
+//                    summary:txtSumy,
+//                    content:txtHTML,
+//                    creater:"",
+//                    moduleID:mModuleID
+//                };
+//                mAjaxParam("POST",draftUrl,draftParam,draftSuccessCallback);
+//                function draftSuccessCallback(){
+//                    alert("成功");
+//                    window.close();
+//                }
+//            });
+            //实现了保存功能
+            $( "#btnRel" ).click(function(){
+                getVal();
+                if(txtHTML==null){
+                    alert(" 内容为空，不能提交");
+                    return ;
+                };
+                if(ipHead==null||ipHead==""||ipAuthor==null||ipAuthor==""){
+                    alert("内容为空，不能提交");
+                    return;
+                }
+                //dong start
+                var content = editor.getContent();
+                $.ajax({
+                    "url":baseUrl+"article/add.shtml",
+                    data:{
+                        "heading":ipHead,
+                        "subheading":ipSubHead,
+                        "author":ipAuthor,
+                        "summary":txtSumy,
+                        "creater":mTestUserCirtleCre,
+                        "moduleID":mModuleID,
+                        "content":content
+                    },
+                    async:true,
+                    type:"POST",
+                    success:relSuccessCallback,
+                    error:relErrorCallback
+                });
+                function relSuccessCallback(){
+                    alert( "提交成功" );
+                    window.close();
+                    $( "#ipHead" ).val("");
+                    $( "#ipSubHead" ).val("");
+                    $( "#ipAuthor" ).val("");
+                    $( "#txtSumy").val("");
+                    editor.setContent("");
+                }
+                function relErrorCallback(){
+                    alert("提交失败");
+                }
+                //dong end
+                /*
+                 var relUrl=baseUrl+"article/add.shtml?"+"heading="+ipHead+"&subheading="+ipSubHead+"&author="+ipAuthor+
+                 "&summary="+txtSumy+"&creater="+mTestUserCirtleCre+"&moduleID="+moduleId.article;
+                 mAjaxAndCallError("GET",relUrl,relSuccessCallback,relErrorCallback);
+                 */
+            });
+            $( "#btnCancel").click( function(){
+                alert("你确定关闭网页吗！");
+                window.close();
+            } );
+            function getVal(){
+                ipHead = $( "#ipHead" ).val();
+                ipSubHead = $( "#ipSubHead" ).val();
+                ipAuthor = $( "#ipAuthor" ).val();
+                txtSumy = $( "#txtSumy" ).val();
+                txtHTML = editor.getContent();
+            }
+            function setVal(mIpHead,mIpSubHead,mIpAuthor,mTxtSumy,mtxtHTML){
+                $( "#ipHead" ).val(mipHead);
+                $( "#ipSubHead" ).val(mipSubHead);
+                $( "#ipAuthor" ).val(mIpAuthor);
+                $( "#txtSumy" ).val(mTxtSumy);
+                txtHTML=mtxtHTML;
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <form class="form-horizontal" >
+            <div class="form-group" style="margin-top:20px;" >
+                <label for="ipHead" class="col-sm-2 control-label">主标题:</label>
+                <div class="col-sm-4">
+                    <input id="ipHead" type="text" class="form-control" value="" placeholder="必须输入主标题,40字以内" maxlength="40"/>
+                </div>
+                <span  class="col-sm-2" style="color: red;"><i class="glyphicon-asterisk "></i></span>
+
+            </div>
+            <div class="form-group">
+                <label for="ipSubHead" class="col-sm-2 control-label" maxlength="40" >副标题:</label>
+                <div class="col-sm-4">
+                    <input type="text" id="ipSubHead" class="form-control" value="" placeholder="可选,40字以内"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label  for="ipAuthor" class="col-sm-2 control-label">作&nbsp;&nbsp;&nbsp;&nbsp;者:</label>
+                <div class="col-sm-4">
+                    <input type="text" id="ipAuthor" class="form-control" value="" placeholder="必选"/>
+                </div>
+                <span class="col-sm-2" style="color: red;"><i class="glyphicon-asterisk "></i></span>
+            </div>
+            <div class="form-group">
+                <!--<label for="txtSumy">文本框</label>-->
+                <!--<textarea id="txtSumy" class="form-control" rows="6"></textarea>-->
+                <label  for="txtSumy" class="col-sm-2 control-label" >摘&nbsp;&nbsp;&nbsp;&nbsp;要:</label>
+                <div class="col-sm-8">
+                     <textarea id="txtSumy"  class="form-control " placeholder="必须输入摘要"  rows="6" ></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label" style="text-align: right;">内&nbsp;&nbsp;&nbsp;&nbsp;容:</label>
+                <div class="col-sm-10" style="">
+                    <script id="editor" type="text/plain" style="height:400px;"></script>
+                </div>
+            </div>
+        </form>
+        <div class="col-sm-12" style=" margin: 20px 0px 20px 0px;  ">
+            <!--<button id="btnSaveDraft" class="btn btn-primary pull-right">保存草稿</button>-->
+            <!--<button id="btnRel" class="btn btn-primary pull-right" style="margin-right: 10px">发布</button>-->
+            <button id="btnRel" class="btn btn-primary pull-right" style="margin-right: 10px">保存</button>
+            <button id="btnCancel" class="btn btn-primary pull-right" style="margin-right: 10px">取消</button>
+        </div>
+    </div>
+</body>
+</html>

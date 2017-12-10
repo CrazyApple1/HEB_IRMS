@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ArticleSqlMap">
+<!--查询实体类  -->
+	<typeAlias alias="article" type="com.boco.itms.irms.po.Article"/>
+<!--查询实体Vo  -->
+	<typeAlias alias="articleVo" type="com.boco.itms.irms.vo.ArticleVo"/>
+	
+	
+	<resultMap class="com.boco.itms.irms.po.Article" id="articleMap">
+		<result property="articleID" jdbcType="NUMBER" column="articleID"/>
+		<result property="heading" jdbcType="VARCHAR2" column="heading"/>
+		<result property="subheading" jdbcType="VARCHAR2" column="subheading"/>
+		<result property="author" jdbcType="VARCHAR2" column="author"/>
+		<result property="summary" jdbcType="VARCHAR2" column="summary"/>
+		<result property="content" jdbcType="CLOB" column="content"/>
+		<result property="releaseDate" jdbcType="DATE" column="releaseDate"/>
+		<result property="deleteFlag" jdbcType="CHAR" column="deleteFlag"/>
+		<result property="releaseFlag" jdbcType="CHAR" column="releaseFlag"/>
+		<result property="creater" jdbcType="VARCHAR2" column="createUser"/>
+		<result property="publisher" jdbcType="VARCHAR2" column="releaseUser"/>
+		<result property="createDate" jdbcType="DATE" column="createDate"/>
+		<result property="moduleID" jdbcType="VARCHAR2" column="moduleID"/>
+	</resultMap>
+	<sql id="articleFields">
+		articleID,	 heading, subheading, author, summary, content, releaseDate, deleteFlag, releaseFlag, moduleID,createUser,releaseUser,createDate
+	</sql>
+<!--插入实体  -->
+<insert id="add" parameterClass="article">
+	<selectKey resultClass="Long" keyProperty="articleID">
+		SELECT ITMS_IRMS_ARTICLE_SEQ.NEXTVAL AS articleID FROM DUAL
+	</selectKey>
+	INSERT INTO ITMS_IRMS_ARTICLE
+	(
+	 <include refid="articleFields"/>
+	)
+	VALUES
+	(
+		#articleID#,#heading#, #subheading#, #author#, #summary#, #content#, #releaseDate#, #deleteFlag#, #releaseFlag#, #moduleID#,#creater#,#publisher#,#createDate#
+	)
+</insert>
+<!-- 删除实体 -->
+	<update id="deleteByKey" parameterClass="java.lang.Long">
+		UPDATE ITMS_IRMS_ARTICLE SET deleteFlag ='1' where articleID=#id#
+	</update>
+<!-- 修改实体 -->
+	<update id="update" parameterClass="article">
+		UPDATE
+			 ITMS_IRMS_ARTICLE 
+		SET 
+			heading= #heading#,
+			subheading=#subheading#,
+			author=#author#,
+			summary=#summary#,
+			content=#content#,
+			releaseDate=#releaseDate#,
+			deleteFlag=#deleteFlag#,
+			releaseFlag=#releaseFlag#,
+			moduleID=#moduleID# ,
+			createUser = #creater#, 
+			releaseUser=#publisher#,
+			createDate=#createDate#
+		WHERE
+			 articleID=#articleID#
+	</update>
+	<!-- 根据ID查询    -->
+	<select id="selectByKey" parameterClass="java.lang.Long" resultMap="articleMap">
+		SELECT
+			  <include refid="articleFields"/>
+		FROM
+			ITMS_IRMS_ARTICLE
+		WHERE
+			articleId=#id# AND deleteFlag='0' 
+	</select>
+	<!--查询所有实体,按照 ID进行降序,通常测试使用 -->
+	<select id="selectList" resultMap="articleMap">
+		SELECT 
+			 <include refid="articleFields"/>
+		FROM 
+			ITMS_IRMS_ARTICLE 
+		WHERE 
+			deleteFlag='0'
+		ORDER BY
+			articleID DESC
+	</select>
+	<!--批量ID查询实体  -->
+	<select id="selectListByIds" parameterClass="java.lang.String" resultMap="articleMap">
+		SELECT
+			  <include refid="articleFields"/>
+		FROM
+			ITMS_IRMS_ARTICLE
+		WHERE
+			articleId IN ($ids2String$) AND deleteFlag='0' 
+	</select>
+	<!-- 查询分页信息,有查询信息,服务端进行分页  -->
+	<select id="getPageResult"  parameterClass="com.boco.itms.irms.vo.ArticleVo" resultMap="articleMap">
+	<![CDATA[ 
+		SELECT 
+			temp.articleID,	 temp.heading, temp.subheading, temp.author, temp.summary, temp.content, temp.releaseDate, temp.deleteFlag, temp.releaseFlag, temp.moduleID,temp.createUser,temp.releaseUser,temp.createDate
+		FROM 
+			(
+			SELECT 
+				innerT.*,rownum rn 
+			FROM 
+				(
+				SELECT 
+					a.*
+				FROM
+					 ITMS_IRMS_ARTICLE a
+					$whereStatement$
+					$orderByStatement$
+				) innerT
+			WHERE ROWNUM <= #endIndex#
+			) temp
+		 WHERE temp.rn > #startIndex#
+		]]>
+	</select>
+	<!-- 查询分页信息,有查询信息      前端分页  -->
+	<select id="getPageResultWithoutPage" parameterClass="com.boco.itms.irms.vo.ArticleVo" resultMap="articleMap">
+			SELECT
+			  <include refid="articleFields"/>
+		FROM
+			ITMS_IRMS_ARTICLE
+			$whereStatement$
+			$orderByStatement$
+	
+	</select>
+	<!--查询数据总量,有where  -->
+	<select id="getTotalResults" parameterClass="com.boco.itms.irms.vo.ArticleVo" resultClass="java.lang.Long">
+		SELECT count(articleId) 
+		FROM
+			ITMS_IRMS_ARTICLE
+		$whereStatement$
+	</select>
+	
+	
+</sqlMap>
+	
